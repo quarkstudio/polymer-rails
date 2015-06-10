@@ -20,20 +20,20 @@ module Polymer
 
       def require_imports
         @component.imports.each do |import|
-          @context.require_asset absolute_asset_path(import.attributes['href'].value)
+          @context.require_asset absolute_asset_path(import.attr('href'))
           import.remove
         end
       end
 
       def inline_javascripts
         @component.javascripts.each do |script|
-          @component.replace_node(script, 'script', asset_content(script.attributes['src'].value))
+          @component.replace_node(script, 'script', asset_content(script.attr('src')))
         end
       end
 
       def inline_styles
         @component.stylesheets.each do |link|
-          @component.replace_node(link, 'style', asset_content(link.attributes['href'].value))
+          @component.replace_node(link, 'style', asset_content(link.attr('href')))
         end
       end
 

@@ -1,4 +1,3 @@
-require 'nokogumbo'
 
 module Polymer
   module Rails
@@ -9,41 +8,41 @@ module Polymer
       XML_OPTIONS = { save_with: Nokogiri::XML::Node::SaveOptions::NO_EMPTY_TAGS }
 
       def initialize(data)
-        @doc = ::Nokogiri::HTML5("<body>#{data}</body>")
+        @doc = org.jsoup.Jsoup.parse_body_fragment(data)
+        @doc.output_settings.charset(ENCODING)
       end
 
       def stringify
-        xml_nodes.reduce(to_html) do |output, node|
-          output.gsub(node.to_html, node.to_xml(XML_OPTIONS)).encode(ENCODING)
-        end
+        to_html
       end
 
       def replace_node(node, name, content)
-        node.replace create_node(name, content)
+        node.replace_with create_node(name, content)
       end
 
       def stylesheets
-        @doc.css("link[rel='stylesheet']").reject{|tag| is_external? tag.attributes['href'].value}
+        @doc.select("link[rel=stylesheet]").reject{|tag| is_external? tag.attr('href')}
       end
 
       def javascripts
-        @doc.css("script[src]").reject{|tag| is_external? tag.attributes['src'].value}
+        @doc.select("script[src]").reject{|tag| is_external? tag.attr('src')}
       end
 
       def imports
-        @doc.css("link[rel='import']")
+        @doc.select("link[rel=import]")
       end
 
     private
 
       def create_node(name, content)
-        node = ::Nokogiri::XML::Node.new(name, @doc)
-        node.content = content
+        node = @doc.create_element(name)
+        datanode = org.jsoup.nodes.DataNode.new(content, @doc.base_uri)
+        node.append_child datanode
         node
       end
 
       def to_html
-        @doc.css("body").children.to_html(encoding: ENCODING).lstrip
+        @doc.select('body').html
       end
 
       def xml_nodes
