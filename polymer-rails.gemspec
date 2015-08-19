@@ -12,11 +12,16 @@ Gem::Specification.new do |spec|
   spec.description   = %q{Use of web components and polymer-project in Ruby on Rails projects}
   spec.homepage      = "http://github.com/alchapone/polymer-rails"
   spec.license       = "MIT"
+  spec.platform = 'java'
 
   spec.files = Dir["{app,config,db,lib}/**/*", "Rakefile", "README.md"]
 
+  spec.add_runtime_dependency 'jar-dependencies', "~> 0.1.1"
+  spec.requirements << "jar org.jsoup:jsoup, 1.8.2"
+  spec.add_development_dependency 'ruby-maven', '~> 3.1.1.0'
+
   spec.add_runtime_dependency "rails",    ">= 3.1.0"
-  spec.add_runtime_dependency "sprockets", "< 3.0.0"
+  spec.add_runtime_dependency "sprockets", "~> 3.0.0"
 
   spec.add_development_dependency "bundler", "~> 1.5"
   spec.add_development_dependency "rake",    "~> 0"

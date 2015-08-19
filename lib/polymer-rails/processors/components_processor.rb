@@ -2,11 +2,28 @@ require 'polymer-rails/component'
 
 module Polymer
   module Rails
-    class ComponentsProcessor < Sprockets::Processor
+    class ComponentsProcessor
 
-      def initialize(context, data)
-        @context = context
-        @component = Component.new(data)
+      def self.instance
+        @instance ||= new
+      end
+
+      def self.call(input)
+        instance.call(input)
+      end
+
+      def call(input)
+        prepare(input)
+        data = process
+
+        @context.metadata.merge(data: data)
+      end
+
+      private
+
+      def prepare(input)
+        @context = input[:environment].context_class.new(input)
+        @component = Component.new(input[:data])
       end
 
       def process
@@ -15,8 +32,6 @@ module Polymer
         require_imports
         @component.stringify
       end
-
-    private
 
       def require_imports
         @component.imports.each do |import|
