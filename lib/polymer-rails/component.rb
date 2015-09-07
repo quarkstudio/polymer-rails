@@ -1,53 +1,44 @@
+require 'uri'
 
 module Polymer
   module Rails
     class Component
 
-      ENCODING = 'UTF-8'
-      XML_NODES = ['*[selected]', '*[checked]', '*[src]:not(script)']
-      XML_OPTIONS = { save_with: Nokogiri::XML::Node::SaveOptions::NO_EMPTY_TAGS }
+      # Selectors for component resources
+      SELECTORS = {
+        html:       "link[rel='import']:not([type='css'])",
+        stylesheet: "link[rel='stylesheet'], link[rel='import'][type='css']",
+        javascript: "script[src]"
+      }
 
       def initialize(data)
-        @doc = org.jsoup.Jsoup.parse_body_fragment(data)
-        @doc.output_settings.charset(ENCODING)
+        @adapter = XmlAdapters::Base.factory
+        @doc = @adapter.parse_document(data)
       end
 
       def stringify
-        to_html
+        @adapter.stringify(@doc)
       end
 
       def replace_node(node, name, content)
-        node.replace_with create_node(name, content)
+        @adapter.replace_node node, @adapter.create_node(@doc, name, content)
       end
 
       def stylesheets
-        @doc.select("link[rel=stylesheet]").reject{|tag| is_external? tag.attr('href')}
+        @adapter.css_select(@doc, SELECTORS[:stylesheet]).reject{|tag| is_external? tag.attributes['href'].value}
       end
 
       def javascripts
-        @doc.select("script[src]").reject{|tag| is_external? tag.attr('src')}
+        @adapter.css_select(@doc, SELECTORS[:javascript]).reject do |tag|
+          is_external? tag.attributes['src'].value
+        end
       end
 
-      def imports
-        @doc.select("link[rel=import]")
+      def html_imports
+        @adapter.css_select(@doc, SELECTORS[:html])
       end
 
     private
-
-      def create_node(name, content)
-        node = @doc.create_element(name)
-        datanode = org.jsoup.nodes.DataNode.new(content, @doc.base_uri)
-        node.append_child datanode
-        node
-      end
-
-      def to_html
-        @doc.select('body').html
-      end
-
-      def xml_nodes
-        @doc.css(XML_NODES.join(','))
-      end
 
       def is_external?(source)
         !URI(source).host.nil?
